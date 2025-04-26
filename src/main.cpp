@@ -36,15 +36,13 @@ TFT_eSPI tft = TFT_eSPI();
 TaskHandle_t TaskSerialHandle;
 TaskHandle_t TaskWebServerHandle;
 
-void setup()
-{
+void setup() {
   Serial.begin(SERIAL_BAUD_RATE);
 
-  if (!SPIFFS.begin(true))
-  {
-#ifdef DEBUG_MODE
+  if (!SPIFFS.begin(true)) {
+    #ifdef DEBUG_MODE
     Serial.println("An Error has occurred while mounting SPIFFS");
-#endif
+    #endif
   }
 
   // Setup WiFi AP
@@ -71,69 +69,61 @@ void setup()
 
   server.begin();
 
-#ifdef DEBUG_MODE
+  #ifdef DEBUG_MODE
   Serial.print("Access Point IP: ");
   Serial.println(WiFi.softAPIP());
   Serial.print("SSID: ");
   Serial.println(AP_SSID);
-#endif
+  #endif
 
   // Create tasks
   xTaskCreatePinnedToCore(
-      TaskSerialReader,  // Function
-      "Serial Reader",   // Name
-      4096,              // Stack Size
-      NULL,              // Params
-      1,                 // Priority
-      &TaskSerialHandle, // Handle
-      0                  // Core 0
+    TaskSerialReader,   // Function
+    "Serial Reader",    // Name
+    4096,               // Stack Size
+    NULL,               // Params
+    1,                  // Priority
+    &TaskSerialHandle,  // Handle
+    0                   // Core 0
   );
 
   xTaskCreatePinnedToCore(
-      TaskWebServerHandler,
-      "Web Server",
-      4096,
-      NULL,
-      1,
-      &TaskWebServerHandle,
-      1 // Core 1
+    TaskWebServerHandler,
+    "Web Server",
+    4096,
+    NULL,
+    1,
+    &TaskWebServerHandle,
+    1                   // Core 1
   );
 }
 
-void loop()
-{
+void loop() {
   // Kosong! (jangan ada kerjaan berat di loop())
-  delay(1000);
+  delay(1000); 
 }
 
 // ==================== TASKS ====================
 
 // Task untuk baca serial dan parsing sensor
-void TaskSerialReader(void *pvParameters)
-{
+void TaskSerialReader(void *pvParameters) {
   unsigned long currentMillis = millis();
 
-  for (;;)
-  {
+  for (;;) {
     currentMillis = millis();
 
-    if (Serial.available() > 0)
-    {
-      if (currentMillis - lastDataRefresh >= MIN_REFRESH_INTERVAL_MS)
-      {
+    if (Serial.available() > 0) {
+      if (currentMillis - lastDataRefresh >= MIN_REFRESH_INTERVAL_MS) {
         lastDataRefresh = currentMillis;
-
+        
         String data = Serial.readStringUntil('\n');
-        if (data.length() > 0)
-        {
+        if (data.length() > 0) {
           serialReadCount++;
           lastSerialRead = currentMillis;
-
+          
           sensorParser.parse(data, false);
         }
-      }
-      else
-      {
+      } else {
         Serial.read(); // clear buffer
       }
     }
@@ -142,10 +132,8 @@ void TaskSerialReader(void *pvParameters)
 }
 
 // Task untuk DNS server dan WebServer
-void TaskWebServerHandler(void *pvParameters)
-{
-  for (;;)
-  {
+void TaskWebServerHandler(void *pvParameters) {
+  for (;;) {
     dnsServer.processNextRequest();
     server.handleClient();
     vTaskDelay(1); // kasih waktu ke FreeRTOS scheduler
