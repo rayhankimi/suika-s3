@@ -11,7 +11,7 @@
 #define AP_IP_ADDR 192,168,4,1        // Access Point IP address (192.168.4.1)
 #define AP_SSID "SuikaHW-Monitor"     // Access Point SSID
 #define AP_PASSWORD "suikahw123"      // Access Point password (min 8 characters)
-#define AP_CHANNEL 1                  // WiFi channel (1-13)
+#define AP_CHANNEL 6                  // WiFi channel (1-13)
 #define AP_HIDDEN 0                   // Hide SSID (0 = visible, 1 = hidden)
 #define AP_MAX_CONNECTIONS 4          // Maximum concurrent connections
 
@@ -19,6 +19,8 @@
 #define DATA_TIMEOUT_MS 15000         // Data timeout in milliseconds (how long to wait before considering the connection lost)
 #define MIN_REFRESH_INTERVAL_MS 1000  // Minimum time between data refreshes in milliseconds (to prevent buffer overflow) 
 
+void TaskWebServerHandler(void *pvParameters);
+void TaskSerialReader(void *pvParameters);
 
 void handleRoot();
 void handleData();

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name='viewport' content='width=device-width, initial-scale=1'>
+  <title>SuikaHW Debug</title>
+  <style>
+    body{font-family:monospace;background:#111;color:#eee;padding:10px;font-size:14px;}
+    h3{color:#5bf;margin:8px 0;}
+    pre{background:#222;padding:8px;overflow-x:auto;font-size:12px;white-space:pre-wrap;word-break:break-all;}
+    table{border-collapse:collapse;width:100%;margin:10px 0;}
+    td{border:1px solid #444;padding:4px 8px;}
+    button{background:#444;border:none;color:#fff;padding:4px 8px;border-radius:4px;margin-top:10px;cursor:pointer;}
+    .error{color:#f66;}
+  </style>
+</head>
+<body>
+  <h2>Debug Info</h2>
+  
+  <h3>Status</h3>
+  <table id="statusTable">
+    <tr><td>Loading...</td><td></td></tr>
+  </table>
+  
+  <h3>Raw JSON</h3>
+  <pre id="rawJson">Loading...</pre>
+  
+  <h3>Sensor Values</h3>
+  <table id="sensorTable">
+    <tr><td>Loading...</td><td></td></tr>
+  </table>
+  
+  <button onclick='location.href="/"'>Back</button>
+  
+  <script>
+    // Function to update the debug page
+    function updateDebugInfo() {
+      fetch('/rawdata')
+        .then(response => response.json())
+        .then(data => {
+          // Update Status Table
+          let statusHtml = '';
+          statusHtml += `<tr><td>Serial reads</td><td>${data.status.serialReads}</td></tr>`;
+          statusHtml += `<tr><td>Parse attempts</td><td>${data.status.parseAttempts}</td></tr>`;
+          statusHtml += `<tr><td>Parse errors</td><td>${data.status.parseErrors}</td></tr>`;
+          statusHtml += `<tr><td>Last read</td><td>${data.status.lastReadMs} ms ago</td></tr>`;
+          statusHtml += `<tr><td>Valid data</td><td>${data.status.hasValidData ? 'Yes' : 'No'}</td></tr>`;
+          
+          if (data.status.error) {
+            statusHtml += `<tr><td>Error</td><td class="error">${data.status.error}</td></tr>`;
+          }
+          
+          document.getElementById('statusTable').innerHTML = statusHtml;
+          
+          // Update Raw JSON
+          document.getElementById('rawJson').textContent = data.rawJson;
+          
+          // Update Sensor Values
+          let sensorsHtml = '';
+          sensorsHtml += `<tr><td>CPU Temp</td><td>${data.sensors.cpuTemp} °C</td></tr>`;
+          sensorsHtml += `<tr><td>CPU Usage</td><td>${data.sensors.cpuUsage} %</td></tr>`;
+          sensorsHtml += `<tr><td>GPU Temp</td><td>${data.sensors.gpuTemp} °C</td></tr>`;
+          sensorsHtml += `<tr><td>GPU Usage</td><td>${data.sensors.gpuUsage} %</td></tr>`;
+          sensorsHtml += `<tr><td>RAM</td><td>${data.sensors.ramUsage} GB</td></tr>`;
+          sensorsHtml += `<tr><td>Network Up</td><td>${data.sensors.networkUp} KB/s</td></tr>`;
+          sensorsHtml += `<tr><td>Network Down</td><td>${data.sensors.networkDown} KB/s</td></tr>`;
+          
+          document.getElementById('sensorTable').innerHTML = sensorsHtml;
+        })
+        .catch(error => {
+          console.error('Error fetching debug data:', error);
+        });
+    }
+    
+    // Update on load and every 2 seconds
+    updateDebugInfo();
+    setInterval(updateDebugInfo, 2000);
+  </script>
+</body>
+</html> 

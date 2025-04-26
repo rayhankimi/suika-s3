@@ -49,7 +49,8 @@ void setup() {
   WiFi.mode(WIFI_AP);
   WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
   WiFi.softAP(AP_SSID, AP_PASSWORD, AP_CHANNEL, AP_HIDDEN, AP_MAX_CONNECTIONS);
-
+  delay(100); // Give time for AP to start
+  
   dnsServer.start(DNS_PORT, "*", apIP);
 
   // Setup WebServer Routes

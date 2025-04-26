@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name='viewport' content='width=device-width, initial-scale=1'>
+  <meta charset='UTF-8'>
+  <title>SuikaHW</title>
+  <style>
+    body{font-family:sans-serif;margin:8px;background:#111;color:#fff;}
+    .c{max-width:600px;margin:0 auto;padding:8px;background:#222;border-radius:4px;}
+    .s{margin:8px 0;padding:6px;background:#336;border-radius:4px;}
+    .l{color:#999;font-size:13px;}
+    .v{font-size:18px;font-weight:bold;}
+    .t{color:#f55;}
+    .u{color:#5bf;}
+    .m{color:#5d5;}
+    .n{color:#d5d;}
+    .s{display:flex;justify-content:space-between;align-items:center;}
+    .st{font-size:12px;text-align:center;margin:8px 0;padding:4px;background:#333;border-radius:4px;}
+    button{background:#444;border:none;color:#fff;padding:4px 8px;border-radius:4px;margin-top:8px;cursor:pointer;}
+  </style>
+</head>
+<body>
+  <div class='c'>
+    <h2>SuikaHW Monitor</h2>
+    
+    <div id='status' class='st'>Checking connection...</div>
+    
+    <div class='s'><span class='l'>CPU Temp</span><span class='v t' id='ct'>-</span></div>
+    <div class='s'><span class='l'>CPU Usage</span><span class='v u' id='cu'>-</span></div>
+    <div class='s'><span class='l'>GPU Temp</span><span class='v t' id='gt'>-</span></div>
+    <div class='s'><span class='l'>GPU Usage</span><span class='v u' id='gu'>-</span></div>
+    <div class='s'><span class='l'>RAM</span><span class='v m' id='r'>-</span></div>
+    <div class='s'><span class='l'>Network</span><span class='v n' id='n'>-</span></div>
+    
+    <div id='lu' style='text-align:center;font-size:12px;color:#666;margin-top:10px;'>Last update: never</div>
+    
+    <div style='text-align:center;margin-top:8px;'>
+      <button onclick='location.href="/raw"'>Debug Data</button>
+    </div>
+  </div>
+  
+  <script>
+    let lt=0;
+    function u(){
+      fetch('/data').then(r=>r.json()).then(d=>{
+        document.getElementById('ct').textContent=d.cpu_temp.toFixed(1)+'°C';
+        document.getElementById('cu').textContent=d.cpu_usage.toFixed(1)+'%';
+        document.getElementById('gt').textContent=d.gpu_temp.toFixed(1)+'°C';
+        document.getElementById('gu').textContent=d.gpu_usage.toFixed(1)+'%';
+        document.getElementById('r').textContent=d.ram_usage.toFixed(1)+' GB';
+        document.getElementById('n').textContent=d.network_up.toFixed(1)+'/'+d.network_down.toFixed(1)+' KB/s';
+        const t=new Date().toLocaleTimeString();
+        document.getElementById('lu').textContent='Last update: '+t;
+        lt=Date.now();
+        c();
+      }).catch(e=>{console.error(e);});
+    }
+    
+    function c(){
+      fetch('/status').then(r=>r.json()).then(d=>{
+        const s=document.getElementById('status');
+        if(d.hasValidData){
+          if(Date.now()-lt<10000){
+            s.textContent='PC Connected';
+            s.style.background='#373';
+          }else{
+            s.textContent='Connection Stale';
+            s.style.background='#883';
+          }
+        }else{
+          s.textContent='No PC Data';
+          s.style.background='#833';
+        }
+      }).catch(e=>{});
+    }
+    
+    u();
+    setInterval(u,2000);
+    setInterval(c,5000);
+  </script>
+</body>
+</html> 

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name='viewport' content='width=device-width, initial-scale=1'>
+  <title>SuikaHW Status</title>
+  <style>
+    body{font-family:monospace;background:#111;color:#eee;padding:10px;font-size:14px;}
+    h3{color:#5bf;margin:8px 0;}
+    table{border-collapse:collapse;width:100%;margin:10px 0;}
+    td{border:1px solid #444;padding:4px 8px;}
+    .good{color:#5f9;}
+    .bad{color:#f66;}
+    button{background:#444;border:none;color:#fff;padding:4px 8px;border-radius:4px;margin-top:10px;cursor:pointer;}
+  </style>
+</head>
+<body>
+  <h2>Connection Status</h2>
+  
+  <table id="statusTable">
+    <tr><td>Loading...</td><td></td></tr>
+  </table>
+  
+  <button onclick='location.href="/"'>Back</button>
+  <button onclick='location.href="/raw"'>Debug Details</button>
+  
+  <script>
+    // Function to update the status
+    function updateStatus() {
+      fetch('/status')
+        .then(response => response.json())
+        .then(data => {
+          let statusHtml = '';
+          
+          // Connection status
+          let connStatusClass = data.hasValidData ? 'good' : 'bad';
+          let connStatusText = data.hasValidData ? 'Connected' : 'Not Connected';
+          statusHtml += `<tr><td>PC Connection</td><td class="${connStatusClass}">${connStatusText}</td></tr>`;
+          
+          // Last data reception time
+          statusHtml += `<tr><td>Last Data Received</td><td>${data.lastReadMs} ms ago</td></tr>`;
+          
+          // Serial reads count
+          statusHtml += `<tr><td>Total Data Received</td><td>${data.serialReads} packets</td></tr>`;
+          
+          // Parse attempts and errors
+          statusHtml += `<tr><td>Parse Attempts</td><td>${data.parseAttempts}</td></tr>`;
+          
+          // Parse error rate
+          let errorRate = data.parseAttempts > 0 ? ((data.parseErrors / data.parseAttempts) * 100).toFixed(1) : 0;
+          let errorClass = errorRate < 5 ? 'good' : 'bad';
+          statusHtml += `<tr><td>Parse Errors</td><td class="${errorClass}">${data.parseErrors} (${errorRate}%)</td></tr>`;
+          
+          // Error message if any
+          if (data.error) {
+            statusHtml += `<tr><td>Last Error</td><td class="bad">${data.error}</td></tr>`;
+          }
+          
+          // Uptime
+          let uptime = Math.floor(data.uptime / 1000);
+          let days = Math.floor(uptime / 86400);
+          let hours = Math.floor((uptime % 86400) / 3600);
+          let minutes = Math.floor((uptime % 3600) / 60);
+          let seconds = uptime % 60;
+          let uptimeStr = '';
+          if (days > 0) uptimeStr += `${days}d `;
+          if (hours > 0 || days > 0) uptimeStr += `${hours}h `;
+          if (minutes > 0 || hours > 0 || days > 0) uptimeStr += `${minutes}m `;
+          uptimeStr += `${seconds}s`;
+          
+          statusHtml += `<tr><td>Device Uptime</td><td>${uptimeStr}</td></tr>`;
+          
+          // IP Address
+          statusHtml += `<tr><td>IP Address</td><td>${data.ip}</td></tr>`;
+          
+          document.getElementById('statusTable').innerHTML = statusHtml;
+        })
+        .catch(error => {
+          console.error('Error fetching status:', error);
+        });
+    }
+    
+    // Update on load and every 2 seconds
+    updateStatus();
+    setInterval(updateStatus, 2000);
+  </script>
+</body>
+</html> 
